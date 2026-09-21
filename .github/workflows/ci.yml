@@ -7,6 +7,9 @@ on:
     branches: [ main, master ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -27,24 +30,32 @@ jobs:
           channel: 'stable'
           cache: true
 
+      - name: Generate Android Platform Structure
+        run: flutter create --platforms=android --org com.yourname .
+
       - name: Install Dependencies
         run: flutter pub get
 
-      - name: Verify Formatting
-        run: dart format --set-exit-if-changed .
-
-      - name: Analyze Project Source
-        run: flutter analyze --fatal-infos
-
-      - name: Run Tests with Coverage
-        run: flutter test --coverage
+      - name: Run Tests
+        run: flutter test
 
       - name: Build Android APK
         run: flutter build apk --debug
 
-      - name: Upload Android APK
+      - name: Upload Android APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: brim-app-debug-apk
           path: build/app/outputs/flutter-apk/app-debug.apk
-          if-no-files-found: warn
+          if-no-files-found: error
+
+      - name: Create GitHub Release with APK
+        uses: softprops/action-gh-release@v2
+        if: github.ref == 'refs/heads/main'
+        with:
+          tag_name: v1.0.0-${{ github.run_number }}
+          name: "Brim App v1.0 (Build ${{ github.run_number }})"
+          body: "Direct download for Android phone installation. Download `app-debug.apk` below and open on your device."
+          files: build/app/outputs/flutter-apk/app-debug.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

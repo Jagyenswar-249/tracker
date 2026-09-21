@@ -8,6 +8,7 @@ import '../../core/glass/glass_tier.dart';
 import '../../core/widgets/aurora_background.dart';
 import '../../core/widgets/undo_toast.dart';
 import '../../domain/entities/cadence.dart';
+import '../../domain/entities/period_snapshot.dart';
 import '../work_detail/work_detail_page.dart';
 import 'tasks_controller.dart';
 import 'widgets/filter_chips.dart';
@@ -143,7 +144,7 @@ class _TasksPageState extends State<TasksPage> {
   }
 
   Widget _buildWorksList(
-      BuildContext context, dynamic snapshot, BrimColors colors) {
+      BuildContext context, PeriodSnapshot snapshot, BrimColors colors) {
     final filteredItems = snapshot.items.where((item) {
       switch (_selectedFilter) {
         case TaskFilter.all:

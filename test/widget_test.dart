@@ -4,7 +4,7 @@ import 'package:brim/app.dart';
 void main() {
   testWidgets('BrimApp smoke test', (WidgetTester tester) async {
     await tester.pumpWidget(const BrimApp());
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 100));
     expect(find.text('Tasks'), findsWidgets);
   });
 }

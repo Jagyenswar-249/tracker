@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 import '../../domain/entities/progress_entry.dart';
 import '../../domain/entities/progress_event.dart';
@@ -11,13 +13,14 @@ class ProgressRepositoryImpl implements ProgressRepository {
   final List<ProgressEvent> _events = [];
   final WorkRepository _workRepository;
   final _entriesController = StreamController<List<ProgressEntry>>.broadcast();
+  static const String _storageKey = 'brim_progress_data';
 
   ProgressRepositoryImpl({
     required WorkRepository workRepository,
     List<ProgressEntry>? initialEntries,
     List<ProgressEvent>? initialEvents,
   }) : _workRepository = workRepository {
-    if (initialEntries != null) {
+    if (initialEntries != null && initialEntries.isNotEmpty) {
       for (final e in initialEntries) {
         _entries['${e.workId}_${e.periodStart}'] = e;
       }
@@ -25,6 +28,30 @@ class ProgressRepositoryImpl implements ProgressRepository {
     if (initialEvents != null) {
       _events.addAll(initialEvents);
     }
+    _initFromStorage();
+  }
+
+  Future<void> _initFromStorage() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString(_storageKey);
+      if (raw != null && raw.isNotEmpty) {
+        final list = jsonDecode(raw) as List<dynamic>;
+        for (final item in list) {
+          final e = ProgressEntry.fromJson(item as Map<String, dynamic>);
+          _entries['${e.workId}_${e.periodStart}'] = e;
+        }
+      }
+    } catch (_) {}
+    _entriesController.add(_entries.values.toList());
+  }
+
+  Future<void> _persist() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final data = _entries.values.map((e) => e.toJson()).toList();
+      await prefs.setString(_storageKey, jsonEncode(data));
+    } catch (_) {}
   }
 
   @override
@@ -81,6 +108,7 @@ class ProgressRepositoryImpl implements ProgressRepository {
     );
     _events.add(event);
 
+    await _persist();
     _entriesController.add(_entries.values.toList());
   }
 
@@ -98,7 +126,6 @@ class ProgressRepositoryImpl implements ProgressRepository {
   }) async {
     final rollups = <String, double>{};
 
-    // Find all unique daily periods in entries
     final dailyPeriodStarts = _entries.values
         .map((e) => e.periodStart)
         .where((ps) => ps.compareTo(fromDate) >= 0 && ps.compareTo(toDate) <= 0)

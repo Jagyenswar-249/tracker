@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 import '../../domain/entities/cadence.dart';
 import '../../domain/entities/work.dart';
@@ -8,14 +10,38 @@ import '../../domain/repositories/work_repository.dart';
 class WorkRepositoryImpl implements WorkRepository {
   final Map<String, Work> _works = {};
   final _worksController = StreamController<List<Work>>.broadcast();
+  static const String _storageKey = 'brim_works_data';
 
   WorkRepositoryImpl({List<Work>? initialWorks}) {
-    if (initialWorks != null) {
+    if (initialWorks != null && initialWorks.isNotEmpty) {
       for (final w in initialWorks) {
         _works[w.id] = w;
       }
     }
+    _initFromStorage();
+  }
+
+  Future<void> _initFromStorage() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString(_storageKey);
+      if (raw != null && raw.isNotEmpty) {
+        final list = jsonDecode(raw) as List<dynamic>;
+        for (final item in list) {
+          final w = Work.fromJson(item as Map<String, dynamic>);
+          _works[w.id] = w;
+        }
+      }
+    } catch (_) {}
     _notify();
+  }
+
+  Future<void> _persist() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final data = _works.values.map((w) => w.toJson()).toList();
+      await prefs.setString(_storageKey, jsonEncode(data));
+    } catch (_) {}
   }
 
   void _notify() {
@@ -43,20 +69,23 @@ class WorkRepositoryImpl implements WorkRepository {
 
   @override
   Future<void> createWork(Work work) async {
-    final newWork = work.id.isEmpty
-        ? work.copyWith(
-            id: const Uuid().v4(),
-            createdAt: DateTime.now(),
-            updatedAt: DateTime.now(),
-          )
-        : work;
+    final newId = work.id.isEmpty ? const Uuid().v4() : work.id;
+    final now = DateTime.now();
+    final newWork = work.copyWith(
+      id: newId,
+      startDate: work.startDate.isEmpty ? ymd(now) : work.startDate,
+      createdAt: now,
+      updatedAt: now,
+    );
     _works[newWork.id] = newWork;
+    await _persist();
     _notify();
   }
 
   @override
   Future<void> updateWork(Work work) async {
     _works[work.id] = work.copyWith(updatedAt: DateTime.now());
+    await _persist();
     _notify();
   }
 
@@ -68,6 +97,7 @@ class WorkRepositoryImpl implements WorkRepository {
         archivedAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
+      await _persist();
       _notify();
     }
   }
@@ -80,6 +110,7 @@ class WorkRepositoryImpl implements WorkRepository {
         archivedAt: null,
         updatedAt: DateTime.now(),
       );
+      await _persist();
       _notify();
     }
   }
@@ -92,6 +123,7 @@ class WorkRepositoryImpl implements WorkRepository {
         deletedAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
+      await _persist();
       _notify();
     }
   }

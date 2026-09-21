@@ -33,10 +33,14 @@ class GlassSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).extension<BrimColors>() ?? BrimColors.dark;
+    final screenHeight = MediaQuery.of(context).size.height;
 
     return Container(
+      constraints: BoxConstraints(
+        maxHeight: screenHeight * 0.90,
+      ),
       decoration: BoxDecoration(
-        color: colors.bgDeep.withOpacity(0.92),
+        color: colors.bgDeep.withOpacity(0.96),
         borderRadius: const BorderRadius.vertical(
           top: Radius.circular(Rad.sheet),
         ),
@@ -82,6 +86,7 @@ class GlassSheet extends StatelessWidget {
               const SizedBox(height: 12),
               Flexible(
                 child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
                   padding: const EdgeInsets.fromLTRB(20.0, 0, 20.0, 24.0),
                   child: child,
                 ),

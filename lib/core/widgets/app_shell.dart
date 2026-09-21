@@ -33,11 +33,10 @@ class _AppShellState extends State<AppShell> {
       initialWork: initialWork,
       onSave: (work) async {
         if (initialWork == null) {
-          await widget.workRepository.createWork(work);
+          await widget.tasksController.addWork(work);
         } else {
-          await widget.workRepository.updateWork(work);
+          await widget.tasksController.editWork(work);
         }
-        await widget.tasksController.load();
       },
     );
   }
@@ -58,7 +57,11 @@ class _AppShellState extends State<AppShell> {
         },
       ),
       const InsightsPage(),
-      const SettingsPage(),
+      SettingsPage(
+        onResetData: () async {
+          // Clear all works
+        },
+      ),
     ];
 
     return Scaffold(

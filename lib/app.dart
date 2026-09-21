@@ -3,10 +3,10 @@ import 'core/theme/brim_theme.dart';
 import 'core/widgets/app_shell.dart';
 import 'data/repositories/progress_repository_impl.dart';
 import 'data/repositories/work_repository_impl.dart';
+import 'domain/usecases/create_work.dart';
 import 'domain/usecases/set_progress.dart';
 import 'domain/usecases/watch_period_snapshot.dart';
 import 'domain/usecases/work_usecases.dart';
-import 'features/debug/seed_data.dart';
 import 'features/onboarding/onboarding_page.dart';
 import 'features/tasks/tasks_controller.dart';
 
@@ -30,17 +30,16 @@ class _BrimAppState extends State<BrimApp> {
     super.initState();
     _onboardingVisible = widget.showOnboarding;
 
-    // Seed in-memory repositories with realistic sample works & 8 weeks of history
-    final initialWorks = SeedData.getWorks();
-    final initialEntries = SeedData.getHistoricalEntries();
-
-    _workRepository = WorkRepositoryImpl(initialWorks: initialWorks);
+    // Start with a clean empty database (no demo tasks)
+    _workRepository = WorkRepositoryImpl(initialWorks: const []);
     _progressRepository = ProgressRepositoryImpl(
       workRepository: _workRepository,
-      initialEntries: initialEntries,
+      initialEntries: const [],
     );
 
     final setProgress = SetProgress(_progressRepository);
+    final createWork = CreateWork(_workRepository);
+    final updateWork = UpdateWork(_workRepository);
     final watchPeriod = WatchPeriodSnapshot(_workRepository, _progressRepository);
     final archiveWork = ArchiveWork(_workRepository);
     final deleteWork = DeleteWork(_workRepository);
@@ -48,6 +47,8 @@ class _BrimAppState extends State<BrimApp> {
     _tasksController = TasksController(
       watchPeriodSnapshot: watchPeriod,
       setProgress: setProgress,
+      createWork: createWork,
+      updateWork: updateWork,
       archiveWork: archiveWork,
       deleteWork: deleteWork,
     );

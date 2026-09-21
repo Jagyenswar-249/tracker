@@ -43,7 +43,7 @@ class _GlassButtonState extends State<GlassButton>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 120),
+      duration: const Duration(milliseconds: 100),
     );
     _scaleAnimation = Tween<double>(begin: 1.0, end: 0.96).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
@@ -54,6 +54,16 @@ class _GlassButtonState extends State<GlassButton>
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+
+  void _handleTap() {
+    if (widget.onPressed == null || widget.isLoading) return;
+    if (widget.variant == GlassButtonVariant.destructive) {
+      BrimHaptics.heavyImpact();
+    } else {
+      BrimHaptics.lightImpact();
+    }
+    widget.onPressed!();
   }
 
   @override
@@ -67,19 +77,11 @@ class _GlassButtonState extends State<GlassButton>
     };
 
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTapDown: (_) => _controller.forward(),
-      onTapUp: (_) {
-        _controller.reverse();
-        if (widget.onPressed != null && !widget.isLoading) {
-          if (widget.variant == GlassButtonVariant.destructive) {
-            BrimHaptics.heavyImpact();
-          } else {
-            BrimHaptics.lightImpact();
-          }
-          widget.onPressed!();
-        }
-      },
+      onTapUp: (_) => _controller.reverse(),
       onTapCancel: () => _controller.reverse(),
+      onTap: _handleTap,
       child: ScaleTransition(
         scale: _scaleAnimation,
         child: GlassSurface(

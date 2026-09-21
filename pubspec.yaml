@@ -31,8 +31,7 @@ dependencies:
   uuid: ^4.4.0
   shared_preferences: ^2.2.3
 
-  # UI, Icons, Charts, Notifications
-  phosphor_flutter: ^2.0.1
+  # UI, Charts, Notifications
   fl_chart: ^0.68.0
   flutter_local_notifications: ^17.1.2
   timezone: ^0.9.3

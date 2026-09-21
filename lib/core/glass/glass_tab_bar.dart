@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../haptics/haptics.dart';
 import '../theme/colors.dart';
 import '../theme/typography.dart';
@@ -23,10 +22,10 @@ class GlassTabBar extends StatelessWidget {
     final colors = Theme.of(context).extension<BrimColors>() ?? BrimColors.dark;
 
     final tabs = [
-      (PhosphorIcons.squaresFour(), PhosphorIcons.squaresFour(PhosphorIconsStyle.fill), 'Tasks'),
-      (PhosphorIcons.calendar(), PhosphorIcons.calendar(PhosphorIconsStyle.fill), 'Calendar'),
-      (PhosphorIcons.chartBar(), PhosphorIcons.chartBar(PhosphorIconsStyle.fill), 'Insights'),
-      (PhosphorIcons.gear(), PhosphorIcons.gear(PhosphorIconsStyle.fill), 'Settings'),
+      (Icons.grid_view_outlined, Icons.grid_view_rounded, 'Tasks'),
+      (Icons.calendar_today_outlined, Icons.calendar_today_rounded, 'Calendar'),
+      (Icons.bar_chart_outlined, Icons.bar_chart_rounded, 'Insights'),
+      (Icons.settings_outlined, Icons.settings_rounded, 'Settings'),
     ];
 
     return Padding(
